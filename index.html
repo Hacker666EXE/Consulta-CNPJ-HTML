@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de CNPJ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .container h1 {
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .card {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 22px;
+        }
+        .card p {
+            margin: 5px 0;
+            color: #555;
+        }
+        .card .highlight {
+            font-weight: bold;
+            color: #333;
+        }
+        .card ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .card ul li {
+            margin: 5px 0;
+            color: #555;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+            font-size: 12px;
+        }
+        .footer .highlight {
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Consulta de CNPJ</h1>
+        <form id="cnpj-form">
+            <div class="form-group">
+                <label for="cnpj">Digite o CNPJ:</label>
+                <input type="text" id="cnpj" name="cnpj" required>
+            </div>
+            <button type="submit">Consultar</button>
+        </form>
+        <div id="company-data" class="card"></div>
+    </div>
+
+    <script>
+        document.getElementById('cnpj-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const cnpj = document.getElementById('cnpj').value.replace(/[^\d]+/g, '');
+            if (cnpj.length !== 14) {
+                alert('Por favor, insira um CNPJ válido com 14 dígitos.');
+                return;
+            }
+            await fetchCompanyData(cnpj);
+        });
+
+        async function fetchCompanyData(cnpj) {
+            try {
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                const apiUrl = `https://www.receitaws.com.br/v1/cnpj/${cnpj}`;
+                const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
+                if (!response.ok) {
+                    throw new Error(`Erro na resposta da API: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                if (data.status === "ERROR") {
+                    throw new Error(data.message || 'Erro desconhecido');
+                }
+                displayCompanyData(data);
+            } catch (error) {
+                console.error('Erro ao buscar dados:', error);
+                displayError(error.message);
+            }
+        }
+
+        function displayCompanyData(data) {
+            const companyDataDiv = document.getElementById('company-data');
+            companyDataDiv.innerHTML = `
+                <h2>${data.nome}</h2>
+                <p><span class="highlight">CNPJ:</span> ${data.cnpj}</p>
+                <p><span class="highlight">Abertura:</span> ${data.abertura}</p>
+                <p><span class="highlight">Situação:</span> ${data.situacao}</p>
+                <p><span class="highlight">Tipo:</span> ${data.tipo}</p>
+                <p><span class="highlight">Porte:</span> ${data.porte}</p>
+                <p><span class="highlight">Natureza Jurídica:</span> ${data.natureza_juridica}</p>
+                <p><span class="highlight">Atividade Principal:</span> ${data.atividade_principal[0].text} (${data.atividade_principal[0].code})</p>
+                <p><span class="highlight">Endereço:</span> ${data.logradouro}, ${data.numero} ${data.complemento}, ${data.bairro}, ${data.municipio} - ${data.uf}, CEP: ${data.cep}</p>
+                <p><span class="highlight">Telefone:</span> ${data.telefone}</p>
+                <p><span class="highlight">Última Atualização:</span> ${new Date(data.ultima_atualizacao).toLocaleString()}</p>
+                <h3>Quadro de Sócios e Administradores:</h3>
+                <ul>
+                    ${data.qsa.map(person => `<li>${person.nome} - ${person.qual}</li>`).join('')}
+                </ul>
+            `;
+            const footer = document.createElement('div');
+            footer.classList.add('footer');
+            footer.innerHTML = `<span class="highlight">Consulta realizada em:</span> ${new Date().toLocaleString()} - <span class="highlight">by zBLACKHAT</span>`;
+            companyDataDiv.appendChild(footer);
+        }
+
+        function displayError(message) {
+            const companyDataDiv = document.getElementById('company-data');
+            companyDataDiv.innerHTML = `<p class="error">Erro: ${message}</p>`;
+        }
+    </script>
+</body>
+</html>
