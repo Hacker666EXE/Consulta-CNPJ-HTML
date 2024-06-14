@@ -37,4 +37,4 @@ Este é um aplicativo web simples desenvolvido em HTML, CSS e JavaScript para co
 - Certifique-se de ter uma conexão com a internet ativa para realizar consultas válidas à API.
 
 Este projeto foi criado para demonstrar como integrar APIs externas em páginas web usando JavaScript e oferecer uma interface simples e eficiente para consultar informações de empresas através do CNPJ.
-  ![checker cnpj](cnpj.png)
+  ![checker cnpj](cnpj.gif)
